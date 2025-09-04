@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excellence Odontologia - Gerador de Receitas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #d8932b;
+            --secondary-color: #a88934;
+            --accent-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7f9;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .clinic-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .dosage-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .medicine-item {
+            background-color: var(--accent-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .medicine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .remove-btn {
+            background-color: #dc3545;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        
+        .remove-btn:hover {
+            background-color: #bd2130;
+        }
+        
+        .dosage-info {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .receipt {
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            min-height: 400px;
+            background: white;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .clinic-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .logo-excellence {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+            letter-spacing: 2px;
+        }
+        
+        .logo-subtitle {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: -5px;
+        }
+        
+        .receipt-content {
+            margin: 20px 0;
+        }
+        
+        .receipt-footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .patient-info {
+            margin-bottom: 20px;
+        }
+        
+        .medicines-list {
+            margin: 20px 0;
+        }
+        
+        .signature-area {
+            margin-top: 60px;
+            text-align: center;
+        }
+        
+        .signature-line {
+            width: 300px;
+            border-top: 1px solid black;
+            margin: 0 auto;
+            padding-top: 5px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .generate-btn {
+            background-color: #28a745;
+        }
+        
+        .generate-btn:hover {
+            background-color: #218838;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .clinic-name {
+                font-size: 1.4rem;
+            }
+            
+            .dosage-fields {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo-excellence {
+                font-size: 24px;
+            }
+            
+            .logo-subtitle {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="clinic-name">Excellence Odontologia Integrada Ltda</h1>
+        </header>
+        
+        <div class="main-content">
+            <section class="form-section">
+                <h2>Dados da Receita</h2>
+                
+                <div class="form-group">
+                    <label for="professional-name">Nome do Profissional e CRO:</label>
+                    <input type="text" id="professional-name" placeholder="Digite seu nome completo e número do cro">
+                </div>
+               
+                
+                <div class="form-group">
+                    <label for="patient-name">Nome do Paciente:</label>
+                    <input type="text" id="patient-name" placeholder="Digite o nome completo do paciente">
+                </div>
+                
+                <div class="form-group">
+                    <label for="medicine-select">Selecionar Fármaco:</label>
+                    <select id="medicine-select">
+                        <option value="">Selecione um fármaco</option>
+                        <option value="Amoxicilina" data-dosage="500mg" data-form="cápsula">Amoxicilina</option>
+                        <option value="Ibuprofeno" data-dosage="400mg" data-form="comprimido">Ibuprofeno</option>
+                        <option value="Paracetamol" data-dosage="750mg" data-form="comprimido">Paracetamol</option>
+                        <option value="Diclofenaco" data-dosage="50mg" data-form="comprimido">Diclofenaco</option>
+                        <option value="Clorexidina" data-dosage="0,12%" data-form="enxaguante bucal">Clorexidina (Enxaguante bucal)</option>
+                        <option value="Metronidazol" data-dosage="250mg" data-form="comprimido">Metronidazol</option>
+                        <option value="Penicilina" data-dosage="500mg" data-form="comprimido">Penicilina V</option>
+                        <option value="Nimesulida" data-dosage="100mg" data-form="comprimido">Nimesulida</option>
+                        <option value="Dipirona" data-dosage="500mg" data-form="comprimido">Dipirona</option>
+                        <option value="Omeprazol" data-dosage="20mg" data-form="cápsula">Omeprazol</option>
+                    </select>
+                </div>
+                
+                <div class="dosage-fields">
+                    <div class="form-group">
+                        <label for="dose">Dose por toma:</label>
+                        <input type="text" id="dose" placeholder="Ex: 1 comprimido">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="frequency">Frequência:</label>
+                        <select id="frequency">
+                            <option value="a cada 6 horas">a cada 6 horas</option>
+                            <option value="a cada 8 horas">a cada 8 horas</option>
+                            <option value="a cada 12 horas">a cada 12 horas</option>
+                            <option value="2 vezes ao dia">2 vezes ao dia</option>
+                            <option value="3 vezes ao dia">3 vezes ao dia</option>
+                            <option value="4 vezes ao dia">4 vezes ao dia</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="duration">Duração (dias):</label>
+                        <input type="number" id="duration" min="1" max="30" value="7">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quantity">Quantidade total:</label>
+                        <input type="text" id="quantity" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="instructions">Instruções adicionais:</label>
+                    <textarea id="instructions" rows="3" placeholder="Instruções específicas para o paciente"></textarea>
+                </div>
+                
+                <button id="add-medicine">Adicionar Fármaco</button>
+                
+                <div id="selected-medicines">
+                    <!-- Lista de medicamentos adicionados -->
+                </div>
+            </section>
+            
+            <section class="preview-section">
+                <h2>Prévia da Receita</h2>
+                
+                <div class="receipt" id="receipt-preview">
+                    <div class="receipt-header">
+                        <div class="clinic-logo">
+                            <div class="logo-excellence">Excellence</div>
+                            <div class="logo-subtitle">ODONTOLOGIA INTEGRADA</div>
+                        </div>
+                        <p>Receituário Odontológico</p>
+                    </div>
+                    
+                    <div class="receipt-content">
+                        <div class="patient-info">
+                            <p><strong>Paciente:</strong> <span id="preview-patient-name">________________________________</span></p>
+                            <p><strong>Data:</strong> <span id="preview-date"></span></p>
+                        </div>
+                        
+                        <div class="medicines-list" id="preview-medicines">
+                            <p>Medicamentos prescritos aparecerão aqui.</p>
+                        </div>
+                        
+                        <div class="signature-area">
+                            <div class="signature-line"></div>
+                            <p> Dr(a).<span id="preview-professional-name"> [Seu Nome] </span> </p>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-footer">
+                        <p>Rua Castro Alves, 1511 - Centro - Edf. Maritun Center - 3ª Andar - Sala 304</p>
+                        <p>Feira de Santana - Ba. Cep: 44001-184</p>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button id="generate-pdf" class="generate-btn">Gerar PDF</button>
+                    <button id="clear-form">Limpar Formulário</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Atualizar data atual
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('pt-BR');
+            document.getElementById('preview-date').textContent = formattedDate;
+            
+            // Referências aos elementos do DOM
+            const professionalNameInput = document.getElementById('professional-name');
+            const patientNameInput = document.getElementById('patient-name');
+            const medicineSelect = document.getElementById('medicine-select');
+            const doseInput = document.getElementById('dose');
+            const frequencySelect = document.getElementById('frequency');
+            const durationInput = document.getElementById('duration');
+            const quantityInput = document.getElementById('quantity');
+            const instructionsInput = document.getElementById('instructions');
+            const addMedicineBtn = document.getElementById('add-medicine');
+            const selectedMedicinesDiv = document.getElementById('selected-medicines');
+            const previewProfessionalName = document.getElementById('preview-professional-name');
+            const previewPatientName = document.getElementById('preview-patient-name');
+            const previewMedicinesDiv = document.getElementById('preview-medicines');
+            const generatePdfBtn = document.getElementById('generate-pdf');
+            const clearFormBtn = document.getElementById('clear-form');
+            
+            // Array para armazenar medicamentos selecionados
+            let selectedMedicines = [];
+            
+            // Atualizar nome do profissional na prévia
+            professionalNameInput.addEventListener('input', function() {
+                previewProfessionalName.textContent = this.value || 'Dr. [Seu Nome]';
+            });
+            
+            // Atualizar nome do paciente na prévia
+            patientNameInput.addEventListener('input', function() {
+                previewPatientName.textContent = this.value || '________________________________';
+            });
+            
+            // Preencher automaticamente a dose quando um medicamento é selecionado
+            medicineSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.value) {
+                    const dosage = selectedOption.getAttribute('data-dosage');
+                    const form = selectedOption.getAttribute('data-form');
+                    doseInput.value = `1 ${form} de ${dosage}`;
+                    calculateQuantity();
+                }
+            });
+            
+            // Calcular quantidade quando a frequência ou duração mudar
+            frequencySelect.addEventListener('change', calculateQuantity);
+            durationInput.addEventListener('input', calculateQuantity);
+            
+            // Calcular a quantidade total de medicamento
+            function calculateQuantity() {
+                if (!doseInput.value || !frequencySelect.value || !durationInput.value) return;
+                
+                const dose = doseInput.value;
+                const frequency = frequencySelect.value;
+                const duration = parseInt(durationInput.value);
+                
+                let dailyDoses = 1;
+                
+                if (frequency.includes('6 horas')) dailyDoses = 4;
+                else if (frequency.includes('8 horas')) dailyDoses = 3;
+                else if (frequency.includes('12 horas')) dailyDoses = 2;
+                else if (frequency.includes('2 vezes')) dailyDoses = 2;
+                else if (frequency.includes('3 vezes')) dailyDoses = 3;
+                else if (frequency.includes('4 vezes')) dailyDoses = 4;
+                
+                // Extrair o número de unidades por dose (assumindo que é sempre 1 para simplificar)
+                const unitsPerDose = 1;
+                
+                const totalQuantity = unitsPerDose * dailyDoses * duration;
+                
+                // Extrair a forma farmacêutica e dosagem
+                const formMatch = dose.match(/(comprimido|cápsula|ml|gota|sachê|supositório|ampola)/i);
+                const form = formMatch ? formMatch[0] : 'unidade';
+                
+                // Formatar a quantidade
+                quantityInput.value = `${totalQuantity} ${form}${totalQuantity > 1 ? 's' : ''}`;
+            }
+            
+            // Adicionar medicamento à lista
+            addMedicineBtn.addEventListener('click', function() {
+                const selectedMedicine = medicineSelect.value;
+                const selectedOption = medicineSelect.options[medicineSelect.selectedIndex];
+                
+                if (!selectedMedicine) {
+                    alert('Por favor, selecione um fármaco.');
+                    return;
+                }
+                
+                if (!doseInput.value) {
+                    alert('Por favor, informe a dose.');
+                    return;
+                }
+                
+                if (!durationInput.value || durationInput.value < 1) {
+                    alert('Por favor, informe uma duração válida.');
+                    return;
+                }
+                
+                // Calcular a quantidade se ainda não foi calculada
+                if (!quantityInput.value) {
+                    calculateQuantity();
+                }
+                
+                // Verificar se o medicamento já foi adicionado
+                if (selectedMedicines.some(m => m.name === selectedMedicine && m.dose === doseInput.value && m.frequency === frequencySelect.value)) {
+                    alert('Esta medicação com esta posologia já foi adicionada à receita.');
+                    return;
+                }
+                
+                // Adicionar ao array
+                selectedMedicines.push({
+                    name: selectedMedicine,
+                    dosage: selectedOption.getAttribute('data-dosage'),
+                    form: selectedOption.getAttribute('data-form'),
+                    dose: doseInput.value,
+                    frequency: frequencySelect.value,
+                    duration: durationInput.value,
+                    quantity: quantityInput.value,
+                    instructions: instructionsInput.value
+                });
+                
+                // Atualizar a interface
+                updateMedicinesList();
+                updatePreview();
+                
+                // Resetar os campos do medicamento
+                medicineSelect.value = '';
+                doseInput.value = '';
+                frequencySelect.value = 'a cada 8 horas';
+                durationInput.value = '7';
+                quantityInput.value = '';
+                instructionsInput.value = '';
+            });
+            
+            // Atualizar lista de medicamentos selecionados
+            function updateMedicinesList() {
+                selectedMedicinesDiv.innerHTML = '';
+                
+                selectedMedicines.forEach((medicine, index) => {
+                    const medicineItem = document.createElement('div');
+                    medicineItem.className = 'medicine-item';
+                    medicineItem.innerHTML = `
+                        <div class="medicine-header">
+                            <strong>${medicine.name} ${medicine.dosage}</strong>
+                            <button class="remove-btn" data-index="${index}">Remover</button>
+                        </div>
+                        <div class="dosage-info">
+                            <p>${medicine.dose} ${medicine.frequency} por ${medicine.duration} dias</p>
+                            <p>Quantidade: ${medicine.quantity}</p>
+                            ${medicine.instructions ? `<p>Instruções: ${medicine.instructions}</p>` : ''}
+                        </div>
+                    `;
+                    selectedMedicinesDiv.appendChild(medicineItem);
+                });
+                
+                // Adicionar event listeners aos botões de remover
+                document.querySelectorAll('.remove-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const indexToRemove = parseInt(this.getAttribute('data-index'));
+                        selectedMedicines.splice(indexToRemove, 1);
+                        updateMedicinesList();
+                        updatePreview();
+                    });
+                });
+            }
+            
+            // Atualizar a prévia da receita
+            function updatePreview() {
+                if (selectedMedicines.length === 0) {
+                    previewMedicinesDiv.innerHTML = '<p>Medicamentos prescritos aparecerão aqui.</p>';
+                    return;
+                }
+                
+                let html = '<p><strong>Medicamentos Prescritos:</strong></p><ul>';
+                
+                selectedMedicines.forEach(medicine => {
+                    html += `
+                        <li>
+                            <strong>${medicine.name} ${medicine.dosage}</strong><br>
+                            ${medicine.dose} ${medicine.frequency} por ${medicine.duration} dias<br>
+                            <em>Quantidade: ${medicine.quantity}</em>
+                            ${medicine.instructions ? `<br>Instruções: ${medicine.instructions}` : ''}
+                        </li>
+                        <br>
+                    `;
+                });
+                
+                html += '</ul>';
+                previewMedicinesDiv.innerHTML = html;
+            }
+            
+            // Gerar PDF
+            generatePdfBtn.addEventListener('click', function() {
+                if (!professionalNameInput.value) {
+                    alert('Por favor, informe o nome do profissional.');
+                    return;
+                }
+                
+                if (!patientNameInput.value) {
+                    alert('Por favor, informe o nome do paciente.');
+                    return;
+                }
+                
+                if (selectedMedicines.length === 0) {
+                    alert('Por favor, adicione pelo menos um fármaco à receita.');
+                    return;
+                }
+                
+                // Usar html2canvas e jsPDF para gerar o PDF
+                const { jsPDF } = window.jspdf;
+                
+                html2canvas(document.getElementById('receipt-preview')).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    const imgWidth = 210; // Largura A4 em mm
+                    const pageHeight = 297; // Altura A4 em mm
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    // Adicionar novas páginas se a receita for muito longa
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    
+                    // Salvar o PDF
+                    pdf.save(`Receita_${patientNameInput.value.replace(/\s+/g, '_')}.pdf`);
+                });
+            });
+            
+            // Limpar formulário
+            clearFormBtn.addEventListener('click', function() {
+                professionalNameInput.value = '';
+                patientNameInput.value = '';
+                medicineSelect.value = '';
+                doseInput.value = '';
+                frequencySelect.value = 'a cada 8 horas';
+                durationInput.value = '7';
+                quantityInput.value = '';
+                instructionsInput.value = '';
+                selectedMedicines = [];
+                previewProfessionalName.textContent = 'Dr. [Seu Nome]';
+                previewPatientName.textContent = '________________________________';
+                updateMedicinesList();
+                updatePreview();
+            });
+            
+            // Inicializar cálculo de quantidade
+            calculateQuantity();
+        });
+    </script>
+</body>
+</html>
