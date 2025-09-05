@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excellence Odontologia - Gerador de Receitas</title>
+    <title>Excellence Odontologia - Gerador de Receitas e Atestados</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --primary-color: #d8932b;
-            --secondary-color: #a88934;
+            --primary-color: #1a6c8c;
+            --secondary-color: #34a4a8;
             --accent-color: #f8f9fa;
             --text-color: #333;
             --border-color: #ddd;
@@ -26,50 +25,93 @@
             background-color: #f5f7f9;
             color: var(--text-color);
             line-height: 1.6;
+            padding: 20px;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
         header {
             background-color: var(--primary-color);
             color: white;
-            padding: 15px 0;
+            padding: 20px;
             text-align: center;
-            border-radius: 8px 8px 0 0;
         }
         
         .clinic-name {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: bold;
+            margin-bottom: 10px;
         }
         
-        .main-content {
+        .clinic-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .tabs {
             display: flex;
-            flex-wrap: wrap;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .tab-button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin: 20px 0;
+        }
+        
+        @media (max-width: 900px) {
+            .form-container {
+                grid-template-columns: 1fr;
+            }
         }
         
         .form-section {
-            flex: 1;
-            min-width: 300px;
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
         
         .preview-section {
-            flex: 1;
-            min-width: 300px;
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
         }
         
         h2 {
@@ -91,7 +133,7 @@
         
         input, select, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             font-size: 16px;
@@ -150,19 +192,16 @@
             color: #666;
         }
         
-        .receipt {
+        .receipt, .certificate {
             border: 1px solid var(--border-color);
             padding: 20px;
             min-height: 400px;
             background: white;
         }
         
-        .receipt-header {
+        .receipt-header, .certificate-header {
             text-align: center;
             margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
         
         .clinic-logo {
@@ -188,11 +227,11 @@
             margin-top: -5px;
         }
         
-        .receipt-content {
+        .receipt-content, .certificate-content {
             margin: 20px 0;
         }
         
-        .receipt-footer {
+        .receipt-footer, .certificate-footer {
             margin-top: 40px;
             text-align: center;
             font-size: 0.9rem;
@@ -233,26 +272,14 @@
             background-color: #218838;
         }
         
-        @media (max-width: 768px) {
-            .main-content {
-                flex-direction: column;
-            }
-            
-            .clinic-name {
-                font-size: 1.4rem;
-            }
-            
-            .dosage-fields {
-                grid-template-columns: 1fr;
-            }
-            
-            .logo-excellence {
-                font-size: 24px;
-            }
-            
-            .logo-subtitle {
-                font-size: 16px;
-            }
+        .certificate-text {
+            line-height: 1.8;
+            margin: 20px 0;
+            text-align: justify;
+        }
+        
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -260,129 +287,257 @@
     <div class="container">
         <header>
             <h1 class="clinic-name">Excellence Odontologia Integrada Ltda</h1>
+            <div class="clinic-subtitle">Sistema de Geração de Receitas e Atestados</div>
         </header>
         
-        <div class="main-content">
-            <section class="form-section">
-                <h2>Dados da Receita</h2>
-                
-                <div class="form-group">
-                    <label for="professional-name">Nome do Profissional e CRO:</label>
-                    <input type="text" id="professional-name" placeholder="Digite seu nome completo e número do cro">
-                </div>
-               
-                
-                <div class="form-group">
-                    <label for="patient-name">Nome do Paciente:</label>
-                    <input type="text" id="patient-name" placeholder="Digite o nome completo do paciente">
-                </div>
-                
-                <div class="form-group">
-                    <label for="medicine-select">Selecionar Fármaco:</label>
-                    <select id="medicine-select">
-                        <option value="">Selecione um fármaco</option>
-                        <option value="Amoxicilina" data-dosage="500mg" data-form="cápsula">Amoxicilina</option>
-                        <option value="Ibuprofeno" data-dosage="400mg" data-form="comprimido">Ibuprofeno</option>
-                        <option value="Paracetamol" data-dosage="750mg" data-form="comprimido">Paracetamol</option>
-                        <option value="Diclofenaco" data-dosage="50mg" data-form="comprimido">Diclofenaco</option>
-                        <option value="Clorexidina" data-dosage="0,12%" data-form="enxaguante bucal">Clorexidina (Enxaguante bucal)</option>
-                        <option value="Metronidazol" data-dosage="250mg" data-form="comprimido">Metronidazol</option>
-                        <option value="Penicilina" data-dosage="500mg" data-form="comprimido">Penicilina V</option>
-                        <option value="Nimesulida" data-dosage="100mg" data-form="comprimido">Nimesulida</option>
-                        <option value="Dipirona" data-dosage="500mg" data-form="comprimido">Dipirona</option>
-                        <option value="Omeprazol" data-dosage="20mg" data-form="cápsula">Omeprazol</option>
-                    </select>
-                </div>
-                
-                <div class="dosage-fields">
+        <div class="tabs">
+            <button class="tab-button active" data-tab="prescription">Receituário</button>
+            <button class="tab-button" data-tab="certificate">Atestados</button>
+        </div>
+        
+        <!-- ABA DE RECEITUÁRIO -->
+        <div class="tab-content active" id="prescription-tab">
+            <div class="form-container">
+                <section class="form-section">
+                    <h2>Dados da Receita</h2>
+                    
                     <div class="form-group">
-                        <label for="dose">Dose por toma:</label>
-                        <input type="text" id="dose" placeholder="Ex: 1 comprimido">
+                        <label for="professional-name">Nome do Profissional:</label>
+                        <input type="text" id="professional-name" placeholder="Digite seu nome completo">
                     </div>
                     
                     <div class="form-group">
-                        <label for="frequency">Frequência:</label>
-                        <select id="frequency">
-                            <option value="a cada 6 horas">a cada 6 horas</option>
-                            <option value="a cada 8 horas">a cada 8 horas</option>
-                            <option value="a cada 12 horas">a cada 12 horas</option>
-                            <option value="2 vezes ao dia">2 vezes ao dia</option>
-                            <option value="3 vezes ao dia">3 vezes ao dia</option>
-                            <option value="4 vezes ao dia">4 vezes ao dia</option>
+                        <label for="patient-name">Nome do Paciente:</label>
+                        <input type="text" id="patient-name" placeholder="Digite o nome completo do paciente">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="medicine-select">Selecionar Fármaco:</label>
+                        <select id="medicine-select">
+                            <option value="">Selecione um fármaco</option>
+                            <option value="Amoxicilina" data-dosage="500mg" data-form="comprimido">Amoxicilina</option>
+                            <option value="Ibuprofeno" data-dosage="400mg" data-form="comprimido">Ibuprofeno</option>
+                            <option value="Paracetamol" data-dosage="750mg" data-form="comprimido">Paracetamol</option>
+                            <option value="Diclofenaco" data-dosage="50mg" data-form="comprimido">Diclofenaco</option>
+                            <option value="Clorexidina" data-dosage="0,12%" data-form="enxaguante bucal">Clorexidina (Enxaguante bucal)</option>
+                            <option value="Metronidazol" data-dosage="250mg" data-form="comprimido">Metronidazol</option>
+                            <option value="Penicilina" data-dosage="500mg" data-form="comprimido">Penicilina V</option>
+                            <option value="Nimesulida" data-dosage="100mg" data-form="comprimido">Nimesulida</option>
+                            <option value="Dipirona" data-dosage="500mg" data-form="comprimido">Dipirona</option>
+                            <option value="Omeprazol" data-dosage="20mg" data-form="cápsula">Omeprazol</option>
                         </select>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="duration">Duração (dias):</label>
-                        <input type="number" id="duration" min="1" max="30" value="7">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="quantity">Quantidade total:</label>
-                        <input type="text" id="quantity" readonly>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="instructions">Instruções adicionais:</label>
-                    <textarea id="instructions" rows="3" placeholder="Instruções específicas para o paciente"></textarea>
-                </div>
-                
-                <button id="add-medicine">Adicionar Fármaco</button>
-                
-                <div id="selected-medicines">
-                    <!-- Lista de medicamentos adicionados -->
-                </div>
-            </section>
-            
-            <section class="preview-section">
-                <h2>Prévia da Receita</h2>
-                
-                <div class="receipt" id="receipt-preview">
-                    <div class="receipt-header">
-                        <div class="clinic-logo">
-                            <div class="logo-excellence">Excellence</div>
-                            <div class="logo-subtitle">ODONTOLOGIA INTEGRADA</div>
-                        </div>
-                        <p>Receituário Odontológico</p>
-                    </div>
-                    
-                    <div class="receipt-content">
-                        <div class="patient-info">
-                            <p><strong>Paciente:</strong> <span id="preview-patient-name">________________________________</span></p>
-                            <p><strong>Data:</strong> <span id="preview-date"></span></p>
+                    <div class="dosage-fields">
+                        <div class="form-group">
+                            <label for="dose">Dose por toma:</label>
+                            <input type="text" id="dose" placeholder="Ex: 1 comprimido">
                         </div>
                         
-                        <div class="medicines-list" id="preview-medicines">
-                            <p>Medicamentos prescritos aparecerão aqui.</p>
+                        <div class="form-group">
+                            <label for="frequency">Frequência:</label>
+                            <select id="frequency">
+                                <option value="a cada 6 horas">a cada 6 horas</option>
+                                <option value="a cada 8 horas">a cada 8 horas</option>
+                                <option value="a cada 12 horas">a cada 12 horas</option>
+                                <option value="2 vezes ao dia">2 vezes ao dia</option>
+                                <option value="3 vezes ao dia">3 vezes ao dia</option>
+                                <option value="4 vezes ao dia">4 vezes ao dia</option>
+                            </select>
                         </div>
                         
-                        <div class="signature-area">
-                            <div class="signature-line"></div>
-                            <p> Dr(a).<span id="preview-professional-name"> [Seu Nome] </span> </p>
+                        <div class="form-group">
+                            <label for="duration">Duração (dias):</label>
+                            <input type="number" id="duration" min="1" max="30" value="7">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="quantity">Quantidade total:</label>
+                            <input type="text" id="quantity" readonly>
                         </div>
                     </div>
                     
-                    <div class="receipt-footer">
-                        <p>Rua Castro Alves, 1511 - Centro - Edf. Maritun Center - 3ª Andar - Sala 304</p>
-                        <p>Feira de Santana - Ba. Cep: 44001-184</p>
+                    <div class="form-group">
+                        <label for="instructions">Instruções adicionais:</label>
+                        <textarea id="instructions" rows="3" placeholder="Instruções específicas para o paciente"></textarea>
                     </div>
-                </div>
+                    
+                    <button id="add-medicine">Adicionar Fármaco</button>
+                    
+                    <div id="selected-medicines">
+                        <!-- Lista de medicamentos adicionados -->
+                    </div>
+                </section>
                 
-                <div class="actions">
-                    <button id="generate-pdf" class="generate-btn">Gerar PDF</button>
-                    <button id="clear-form">Limpar Formulário</button>
-                </div>
-            </section>
+                <section class="preview-section">
+                    <h2>Prévia da Receita</h2>
+                    
+                    <div class="receipt" id="receipt-preview">
+                        <div class="receipt-header">
+                            <div class="clinic-logo">
+                                <div class="logo-excellence">Excellence</div>
+                                <div class="logo-subtitle">ODONTOLOGIA INTEGRADA</div>
+                            </div>
+                            <p>Receituário Odontológico</p>
+                        </div>
+                        
+                        <div class="receipt-content">
+                            <div class="patient-info">
+                                <p><strong>Paciente:</strong> <span id="preview-patient-name">________________________________</span></p>
+                                <p><strong>Data:</strong> <span id="preview-date"></span></p>
+                            </div>
+                            
+                            <div class="medicines-list" id="preview-medicines">
+                                <p>Medicamentos prescritos aparecerão aqui.</p>
+                            </div>
+                            
+                            <div class="signature-area">
+                                <div class="signature-line"></div>
+                                <p><span id="preview-professional-name">Dr(a). [Seu Nome]</span> | CRO-BA XXXXX</p>
+                            </div>
+                        </div>
+                        
+                        <div class="receipt-footer">
+                            <p>Rua Castro Alves, 1511 - Centro - Edf. Maritun Center - 3ª Andar - Sala 304</p>
+                            <p>Feira de Santana - Ba. Cep: 44001-184</p>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="generate-prescription-pdf" class="generate-btn">Gerar PDF da Receita</button>
+                        <button id="clear-prescription-form">Limpar Formulário</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+        
+        <!-- ABA DE ATESTADOS -->
+        <div class="tab-content" id="certificate-tab">
+            <div class="form-container">
+                <section class="form-section">
+                    <h2>Dados do Atestado</h2>
+                    
+                    <div class="form-group">
+                        <label for="certificate-professional-name">Nome do Profissional:</label>
+                        <input type="text" id="certificate-professional-name" placeholder="Digite seu nome completo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificate-patient-name">Nome do Paciente:</label>
+                        <input type="text" id="certificate-patient-name" placeholder="Digite o nome completo do paciente">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificate-type">Tipo de Atestado:</label>
+                        <select id="certificate-type">
+                            <option value="comparecimento">Atestado de Comparecimento</option>
+                            <option value="repouso">Atestado de Repouso</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="rest-days-group">
+                        <label for="rest-days">Dias de Repouso:</label>
+                        <input type="number" id="rest-days" min="1" max="30" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificate-date">Data do Atendimento:</label>
+                        <input type="date" id="certificate-date">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificate-time">Horário do Atendimento:</label>
+                        <input type="time" id="certificate-time">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificate-notes">Observações Adicionais:</label>
+                        <textarea id="certificate-notes" rows="3" placeholder="Observações relevantes para o atestado"></textarea>
+                    </div>
+                </section>
+                
+                <section class="preview-section">
+                    <h2>Prévia do Atestado</h2>
+                    
+                    <div class="certificate" id="certificate-preview">
+                        <div class="certificate-header">
+                            <div class="clinic-logo">
+                                <div class="logo-excellence">Excellence</div>
+                                <div class="logo-subtitle">ODONTOLOGIA INTEGRADA</div>
+                            </div>
+                            <p id="certificate-title">Atestado Odontológico</p>
+                        </div>
+                        
+                        <div class="certificate-content">
+                            <div class="patient-info">
+                                <p><strong>Paciente:</strong> <span id="preview-certificate-patient">________________________________</span></p>
+                                <p><strong>Data:</strong> <span id="preview-certificate-date"></span></p>
+                            </div>
+                            
+                            <div class="certificate-text" id="preview-certificate-text">
+                                <p>Atesto para os devidos fins que o(a) paciente ________________________________ compareceu a consulta odontológica em nossa clínica na data acima mencionada.</p>
+                                
+                                <p id="preview-rest-text" style="display: none;">Recomenda-se repouso pelo período de ________ dias.</p>
+                                
+                                <p>Nada mais a declarar.</p>
+                            </div>
+                            
+                            <div class="signature-area">
+                                <div class="signature-line"></div>
+                                <p><span id="preview-certificate-professional">Dr(a). [Seu Nome]</span> | CRO-BA XXXXX</p>
+                            </div>
+                        </div>
+                        
+                        <div class="certificate-footer">
+                            <p>Rua Castro Alves, 1511 - Centro - Edf. Maritun Center - 3ª Andar - Sala 304</p>
+                            <p>Feira de Santana - Ba. Cep: 44001-184</p>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="generate-certificate-pdf" class="generate-btn">Gerar PDF do Atestado</button>
+                        <button id="clear-certificate-form">Limpar Formulário</button>
+                    </div>
+                </section>
+            </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicialização das abas
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    
+                    // Ativar/desativar botões
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Mostrar/ocultar conteúdo
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+            
             // Atualizar data atual
             const today = new Date();
             const formattedDate = today.toLocaleDateString('pt-BR');
             document.getElementById('preview-date').textContent = formattedDate;
+            document.getElementById('preview-certificate-date').textContent = formattedDate;
+            
+            // Configurar data atual como padrão para o atestado
+            const todayISO = today.toISOString().split('T')[0];
+            document.getElementById('certificate-date').value = todayISO;
+            
+            // Configurar horário atual como padrão para o atestado
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('certificate-time').value = `${hours}:${minutes}`;
             
             // Referências aos elementos do DOM
             const professionalNameInput = document.getElementById('professional-name');
@@ -398,20 +553,65 @@
             const previewProfessionalName = document.getElementById('preview-professional-name');
             const previewPatientName = document.getElementById('preview-patient-name');
             const previewMedicinesDiv = document.getElementById('preview-medicines');
-            const generatePdfBtn = document.getElementById('generate-pdf');
-            const clearFormBtn = document.getElementById('clear-form');
+            const generatePrescriptionPdfBtn = document.getElementById('generate-prescription-pdf');
+            const clearPrescriptionFormBtn = document.getElementById('clear-prescription-form');
+            
+            // Elementos do atestado
+            const certificateProfessionalInput = document.getElementById('certificate-professional-name');
+            const certificatePatientInput = document.getElementById('certificate-patient-name');
+            const certificateTypeSelect = document.getElementById('certificate-type');
+            const restDaysInput = document.getElementById('rest-days');
+            const certificateDateInput = document.getElementById('certificate-date');
+            const certificateTimeInput = document.getElementById('certificate-time');
+            const certificateNotesInput = document.getElementById('certificate-notes');
+            const previewCertificateProfessional = document.getElementById('preview-certificate-professional');
+            const previewCertificatePatient = document.getElementById('preview-certificate-patient');
+            const previewCertificateDate = document.getElementById('preview-certificate-date');
+            const previewCertificateText = document.getElementById('preview-certificate-text');
+            const previewRestText = document.getElementById('preview-rest-text');
+            const certificateTitle = document.getElementById('certificate-title');
+            const generateCertificatePdfBtn = document.getElementById('generate-certificate-pdf');
+            const clearCertificateFormBtn = document.getElementById('clear-certificate-form');
             
             // Array para armazenar medicamentos selecionados
             let selectedMedicines = [];
             
             // Atualizar nome do profissional na prévia
             professionalNameInput.addEventListener('input', function() {
-                previewProfessionalName.textContent = this.value || 'Dr. [Seu Nome]';
+                previewProfessionalName.textContent = this.value || 'Dr(a). [Seu Nome]';
             });
             
             // Atualizar nome do paciente na prévia
             patientNameInput.addEventListener('input', function() {
                 previewPatientName.textContent = this.value || '________________________________';
+            });
+            
+            // Atualizar nome do profissional do atestado na prévia
+            certificateProfessionalInput.addEventListener('input', function() {
+                previewCertificateProfessional.textContent = this.value || 'Dr(a). [Seu Nome]';
+            });
+            
+            // Atualizar nome do paciente do atestado na prévia
+            certificatePatientInput.addEventListener('input', function() {
+                previewCertificatePatient.textContent = this.value || '________________________________';
+            });
+            
+            // Atualizar data do atestado na prévia
+            certificateDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    const date = new Date(this.value);
+                    previewCertificateDate.textContent = date.toLocaleDateString('pt-BR');
+                }
+            });
+            
+            // Alterar tipo de atestado
+            certificateTypeSelect.addEventListener('change', function() {
+                updateCertificatePreview();
+            });
+            
+            // Atualizar dias de repouso
+            restDaysInput.addEventListener('input', function() {
+                updateCertificatePreview();
             });
             
             // Preencher automaticamente a dose quando um medicamento é selecionado
@@ -457,6 +657,41 @@
                 
                 // Formatar a quantidade
                 quantityInput.value = `${totalQuantity} ${form}${totalQuantity > 1 ? 's' : ''}`;
+            }
+            
+            // Atualizar visualização do atestado
+            function updateCertificatePreview() {
+                const certificateType = certificateTypeSelect.value;
+                const patientName = certificatePatientInput.value || '________________________________';
+                const restDays = restDaysInput.value || '________';
+                
+                if (certificateType === 'comparecimento') {
+                    certificateTitle.textContent = 'Atestado de Comparecimento';
+                    previewRestText.style.display = 'none';
+                    
+                    previewCertificateText.innerHTML = `
+                        <p>Atesto para os devidos fins que o(a) paciente <strong>${patientName}</strong> compareceu a consulta odontológica em nossa clínica na data acima mencionada.</p>
+                        
+                        <p>Nada mais a declarar.</p>
+                    `;
+                } else {
+                    certificateTitle.textContent = 'Atestado de Repouso';
+                    previewRestText.style.display = 'block';
+                    previewRestText.innerHTML = `Recomenda-se repouso pelo período de <strong>${restDays} dia(s)</strong>.`;
+                    
+                    previewCertificateText.innerHTML = `
+                        <p>Atesto para os devidos fins que o(a) paciente <strong>${patientName}</strong> compareceu a consulta odontológica em nossa clínica na data acima mencionada, necessitando de repouso para recuperação.</p>
+                        
+                        <p id="preview-rest-text">Recomenda-se repouso pelo período de <strong>${restDays} dia(s)</strong>.</p>
+                        
+                        <p>Nada mais a declarar.</p>
+                    `;
+                }
+                
+                // Adicionar observações se existirem
+                if (certificateNotesInput.value) {
+                    previewCertificateText.innerHTML += `<p><strong>Observações:</strong> ${certificateNotesInput.value}</p>`;
+                }
             }
             
             // Adicionar medicamento à lista
@@ -572,8 +807,8 @@
                 previewMedicinesDiv.innerHTML = html;
             }
             
-            // Gerar PDF
-            generatePdfBtn.addEventListener('click', function() {
+            // Gerar PDF da receita usando jsPDF diretamente
+            generatePrescriptionPdfBtn.addEventListener('click', function() {
                 if (!professionalNameInput.value) {
                     alert('Por favor, informe o nome do profissional.');
                     return;
@@ -589,41 +824,160 @@
                     return;
                 }
                 
-                // Usar html2canvas e jsPDF para gerar o PDF
+                // Usar jsPDF para gerar o PDF diretamente
                 const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
                 
-                html2canvas(document.getElementById('receipt-preview')).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF({
-                        orientation: 'portrait',
-                        unit: 'mm',
-                        format: 'a4'
-                    });
-                    
-                    const imgWidth = 210; // Largura A4 em mm
-                    const pageHeight = 297; // Altura A4 em mm
-                    const imgHeight = canvas.height * imgWidth / canvas.width;
-                    let heightLeft = imgHeight;
-                    let position = 0;
-                    
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                    
-                    // Adicionar novas páginas se a receita for muito longa
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
+                // Adicionar cabeçalho
+                doc.setFontSize(20);
+                doc.setTextColor(26, 108, 140);
+                doc.setFont("helvetica", "bold");
+                doc.text("Excellence", 105, 20, { align: "center" });
+                
+                doc.setFontSize(16);
+                doc.setTextColor(52, 164, 168);
+                doc.text("ODONTOLOGIA INTEGRADA", 105, 27, { align: "center" });
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text("Receituário Médico", 105, 37, { align: "center" });
+                
+                // Adicionar informações do paciente
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Paciente: ${patientNameInput.value}`, 20, 50);
+                doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 20, 57);
+                
+                // Adicionar medicamentos
+                let yPosition = 70;
+                doc.setFont("helvetica", "bold");
+                doc.text("Medicamentos Prescritos:", 20, yPosition);
+                yPosition += 10;
+                
+                doc.setFont("helvetica", "normal");
+                selectedMedicines.forEach(medicine => {
+                    // Verificar se precisa de nova página
+                    if (yPosition > 250) {
+                        doc.addPage();
+                        yPosition = 20;
                     }
                     
-                    // Salvar o PDF
-                    pdf.save(`Receita_${patientNameInput.value.replace(/\s+/g, '_')}.pdf`);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(`${medicine.name} ${medicine.dosage}`, 20, yPosition);
+                    yPosition += 7;
+                    
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`${medicine.dose} ${medicine.frequency} por ${medicine.duration} dias`, 20, yPosition);
+                    yPosition += 7;
+                    
+                    doc.text(`Quantidade: ${medicine.quantity}`, 20, yPosition);
+                    yPosition += 7;
+                    
+                    if (medicine.instructions) {
+                        doc.text(`Instruções: ${medicine.instructions}`, 20, yPosition);
+                        yPosition += 7;
+                    }
+                    
+                    yPosition += 5; // Espaçamento entre medicamentos
                 });
+                
+                // Adicionar assinatura
+                yPosition = yPosition > 200 ? yPosition : 200;
+                doc.line(20, yPosition, 80, yPosition); // Linha de assinatura
+                doc.text(`${professionalNameInput.value} | CRO-BA XXXXX`, 20, yPosition + 10);
+                
+                // Adicionar rodapé
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text("Rua Castro Alves, 1511 - Centro - Edf. Maritun Center - 3ª Andar - Sala 304", 105, 280, { align: "center" });
+                doc.text("Feira de Santana - Ba. Cep: 44001-184", 105, 285, { align: "center" });
+                
+                // Salvar o PDF
+                doc.save(`Receita_${patientNameInput.value.replace(/\s+/g, '_')}.pdf`);
             });
             
-            // Limpar formulário
-            clearFormBtn.addEventListener('click', function() {
+            // Gerar PDF do atestado usando jsPDF diretamente
+            generateCertificatePdfBtn.addEventListener('click', function() {
+                if (!certificateProfessionalInput.value) {
+                    alert('Por favor, informe o nome do profissional.');
+                    return;
+                }
+                
+                if (!certificatePatientInput.value) {
+                    alert('Por favor, informe o nome do paciente.');
+                    return;
+                }
+                
+                // Atualizar a prévia antes de gerar o PDF
+                updateCertificatePreview();
+                
+                // Usar jsPDF para gerar o PDF diretamente
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Adicionar cabeçalho
+                doc.setFontSize(20);
+                doc.setTextColor(26, 108, 140);
+                doc.setFont("helvetica", "bold");
+                doc.text("Excellence", 105, 20, { align: "center" });
+                
+                doc.setFontSize(16);
+                doc.setTextColor(52, 164, 168);
+                doc.text("ODONTOLOGIA INTEGRADA", 105, 27, { align: "center" });
+                
+                const certificateType = certificateTypeSelect.value;
+                const certificateTypeText = certificateType === 'comparecimento' ? 'Atestado de Comparecimento' : 'Atestado de Repouso';
+                
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text(certificateTypeText, 105, 37, { align: "center" });
+                
+                // Adicionar informações do paciente
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Paciente: ${certificatePatientInput.value}`, 20, 50);
+                doc.text(`Data: ${new Date(certificateDateInput.value).toLocaleDateString('pt-BR')}`, 20, 57);
+                
+                // Adicionar texto do atestado
+                let yPosition = 70;
+                doc.text(`Atesto para os devidos fins que o(a) paciente ${certificatePatientInput.value}`, 20, yPosition);
+                yPosition += 7;
+                doc.text(`compareceu a consulta odontológica em nossa clínica na data acima mencionada`, 20, yPosition);
+                yPosition += 10;
+                
+                if (certificateType === 'repouso') {
+                    doc.text(`Recomenda-se repouso pelo período de ${restDaysInput.value} dia(s).`, 20, yPosition);
+                    yPosition += 10;
+                }
+                
+                if (certificateNotesInput.value) {
+                    doc.text(`Observações: ${certificateNotesInput.value}`, 20, yPosition);
+                    yPosition += 10;
+                }
+                
+                doc.text("Nada mais a declarar.", 20, yPosition + 5);
+                
+                // Adicionar assinatura
+                yPosition = yPosition > 180 ? yPosition + 20 : 200;
+                doc.line(20, yPosition, 80, yPosition); // Linha de assinatura
+                doc.text(`${certificateProfessionalInput.value} | CRM-BA XXXXX`, 20, yPosition + 10);
+                
+                // Adicionar rodapé
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text("Rua Castro Alves, 1511 - Centro - Edf. Maritun Center - 3ª Andar - Sala 304", 105, 280, { align: "center" });
+                doc.text("Feira de Santana - Ba. Cep: 44001-184", 105, 285, { align: "center" });
+                
+                // Salvar o PDF
+                const fileName = certificateType === 'comparecimento' 
+                    ? `Atestado_Comparecimento_${certificatePatientInput.value.replace(/\s+/g, '_')}.pdf`
+                    : `Atestado_Repouso_${certificatePatientInput.value.replace(/\s+/g, '_')}.pdf`;
+                
+                doc.save(fileName);
+            });
+            
+            // Limpar formulário da receita
+            clearPrescriptionFormBtn.addEventListener('click', function() {
                 professionalNameInput.value = '';
                 patientNameInput.value = '';
                 medicineSelect.value = '';
@@ -633,14 +987,32 @@
                 quantityInput.value = '';
                 instructionsInput.value = '';
                 selectedMedicines = [];
-                previewProfessionalName.textContent = 'Dr. [Seu Nome]';
+                previewProfessionalName.textContent = 'Dr(a). [Seu Nome]';
                 previewPatientName.textContent = '________________________________';
                 updateMedicinesList();
                 updatePreview();
             });
             
+            // Limpar formulário do atestado
+            clearCertificateFormBtn.addEventListener('click', function() {
+                certificateProfessionalInput.value = '';
+                certificatePatientInput.value = '';
+                certificateTypeSelect.value = 'comparecimento';
+                restDaysInput.value = '1';
+                certificateDateInput.value = todayISO;
+                certificateTimeInput.value = `${hours}:${minutes}`;
+                certificateNotesInput.value = '';
+                previewCertificateProfessional.textContent = 'Dr(a). [Seu Nome]';
+                previewCertificatePatient.textContent = '________________________________';
+                previewCertificateDate.textContent = formattedDate;
+                updateCertificatePreview();
+            });
+            
             // Inicializar cálculo de quantidade
             calculateQuantity();
+            
+            // Inicializar visualização do atestado
+            updateCertificatePreview();
         });
     </script>
 </body>
